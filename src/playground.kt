@@ -19,3 +19,28 @@ fun main(){
 
     println(Test.CLASS1 == Test.CLASS1)
 }
+/*
+var sts = ArrayList<Statement>()
+    sts.add(IfStatement(
+        condition = BinaryExpression(
+            leftExp = Expression(Token("100", "int")),
+            operator = Token("<"),
+            rightExp = Expression(Token("2", "int"))
+        ),
+        block = Block(
+            ArrayList<Statement>()
+        )))
+    sts.add(FunctionCall(
+        funcName = Token("println", "identifier"),
+        params = arrayListOf(Expression(Token("Hello World", "string")))
+    ))
+    sts.add(AssignStatement(
+        varName = Token("testA", "identifier"),
+        varType = Token("string", "keyword"),
+        exp = Expression(Token("test 1000", "string"))
+    ))
+    sts.add(FunctionCall(
+        funcName = Token("println", "identifier"),
+        params = arrayListOf(Expression(Token("testA", "identifier")))
+    ))
+* */

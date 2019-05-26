@@ -98,7 +98,6 @@ class LambdaExpression : Expression{
     }
 }
 
-//代码生成时才需要记录作用域，语法分析时没必要
 class Block(value: Token) : Statement(value){
     var statements: ArrayList<Statement> = ArrayList()
     constructor(statements: ArrayList<Statement>) : this(Token("block")){

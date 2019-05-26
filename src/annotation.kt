@@ -7,27 +7,19 @@ import java.lang.annotation.Inherited
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 @Inherited
-annotation class SymbolTable(val value : String = ""){
-
-}
+annotation class SymbolTable(val value : String = "")
 
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 @Inherited
-annotation class Parser(val value : String = ""){
-
-}
+annotation class Parser(val value : String = "")
 
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 @Inherited
-annotation class Lexer(val value : String = ""){
-
-}
+annotation class Lexer(val value : String = "")
 
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 @Inherited
-annotation class Generator(val value : String = ""){
-
-}
+annotation class Generator(val value : String = "")

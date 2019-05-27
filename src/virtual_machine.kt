@@ -8,18 +8,54 @@ data class MemItem(var name : String = "",
                      var value: String = "",
                      var type : String = "") {}
 
+class StackFrame{
+    var localVars = mutableMapOf<String, MemItem>()
+    var stack : Stack<MemItem> = Stack()
+
+    constructor()
+
+    fun push(item : MemItem){
+        stack.push(item)
+    }
+
+    fun pop(): MemItem {
+        return stack.pop()
+    }
+
+    fun clear(){
+        stack.clear()
+    }
+
+    fun top(): MemItem{
+        return stack.peek()
+    }
+    // overload operator []
+    operator fun get(name : String) : MemItem? {
+        return localVars[name]
+    }
+    operator fun set(name : String, value: MemItem){
+        localVars[name] = value
+    }
+}
+
 class VirtualMachine{
     var programCounter : Int = 0;
     var symbolTable : Scope = Scope("global")
     // built-in type list
     var builtInTypes = arrayListOf<String>()
     var builtInFuncs = arrayListOf<String>()
+    // user-defined types
     var userDefinedTypes = arrayListOf<String>()
+    var classInfoMap = mutableMapOf<String, UserDefinedClassSt>()
     // memory
     var heap = mutableMapOf<String, MemItem>()
-    var stack = mutableMapOf<String, MemItem>()
+    var stack = Stack<StackFrame>()
     // runtime stack
     var runtimeStack: Stack<MemItem> = Stack()
+    var currentFrame = StackFrame()
+
+    // registers
+    var retReg = 0
 
     var irArray: ArrayList<IR> = arrayListOf<IR>()
     var labelMap = mutableMapOf<String, Int>()
@@ -158,7 +194,7 @@ class VirtualMachine{
 
     // load现在stack上查找变量，如果发现是引用类型，则去堆上取值
     fun load(ref: String): MemItem?{
-        val item = stack[ref]
+        val item = currentFrame[ref]
 
         if(item != null && isPrimitive(item.type)){
             return item
@@ -197,15 +233,8 @@ class VirtualMachine{
     }
 
     fun newObject(ref: String, type: String){
-        // 查看自定义类型和系统内置类型列表， 如果类型存在，则初始化对象成员变量，在堆上保存引用，如果不存在，报错
-        val isType = lookupTypeList(type)
-
-        if(isType){
-            heap[ref] = MemItem(name=ref, type=type)
-        }
-        else{
-            // error: required type is not defined
-        }
+        // 类型检查应该放在编译期，这里直接开辟空间
+        heap[ref] = MemItem(name=ref, type=type)
     }
 
     // 把基础类型和引用类型在stack上做个索引
@@ -216,29 +245,47 @@ class VirtualMachine{
         // 前面new指令已经在堆上创建了user.name, user.age, user.sex
         // 这样对象的实现可以很简单，不过就是个命名空间
         // 所以这里只需要存上user和user的类型即可
-        // 需要访问field的时候，直接加上.fieldname去堆上找就行了。反正不可能重名，重名必报错。
+        // 需要访问field的时候，直接加上obj[fieldname]去堆上找就行了。反正不可能重名，重名必报错。
         if(isPrimitive(type)){
-            stack[ref] = MemItem(name=ref, type=type, value = value)
+            currentFrame[ref] = MemItem(name=ref, type=type, value = value)
         }
         else{
-            stack[ref] = MemItem(name=ref, type=type) // 引用类型只作一个类型索引
+            currentFrame[ref] = MemItem(name=ref, type=type) // 引用类型只作一个类型索引
             heap[ref] = MemItem(name=ref, type=type, value = value) // 无值添加值，有值则更新
+            // 如果是在堆上存Map，存数组，这里就完全存不了了。。。
+            // 所以应该修改存储类型
+            // heap[ref] = Object{value=[a=3,b=2,c=1]}
+            // 所以ref.b会被转化为heap[ref][b]
+            // 方法调用ref.func会被转化为Class::func(ref,....)
         }
+    }
+
+    fun storeHeap(ref: String, type: String, value: String){
+        currentFrame[ref] = MemItem(name=ref, type=type) // 引用类型只作一个类型索引
+        heap[ref] = MemItem(name=ref, type=type, value = value) // 无值添加值，有值则更新
     }
 
     fun push(value: String, type: String){
         val item = MemItem()
         item.value = value
         item.type = type
-        runtimeStack.push(item)
+        currentFrame.push(item)
     }
 
     fun push(item: MemItem){
-        runtimeStack.push(item)
+        currentFrame.push(item)
     }
 
     fun pop(): MemItem{
-        return runtimeStack.pop()
+        return currentFrame.pop()
+    }
+
+    fun clearRuntimeStack(){
+        return currentFrame.clear()
+    }
+
+    fun jump(addr: Int){
+        programCounter = addr
     }
 
     fun callFunction(funcName: String){
@@ -432,33 +479,26 @@ class VirtualMachine{
         return !a
     }
 
+
     fun runDirective(ir: IR){
 
         when(ir.operator){
             //data instructions
             "ICONST" ->{
-                val item = MemItem()
-                item.value = ir.dest
-                item.type = "int"
-                runtimeStack.push(item)
+                val item = MemItem(value = ir.dest,type = "int")
+                push(item)
             }
             "FCONST" ->{
-                val item = MemItem()
-                item.value = ir.dest
-                item.type = "float"
-                runtimeStack.push(item)
+                val item = MemItem(value =ir.dest, type="float")
+                push(item)
             }
             "BCONST" ->{
-                val item = MemItem()
-                item.value = ir.dest
-                item.type = "boolean"
-                runtimeStack.push(item)
+                val item = MemItem(value = ir.dest, type = "boolean")
+                push(item)
             }
             "STRING" ->{
-                val item = MemItem()
-                item.value = ir.dest
-                item.type = "string"
-                runtimeStack.push(item)
+                val item = MemItem(value = ir.dest, type = "string")
+                push(item)
             }
             "NEW" ->{
                 val identifier = ir.dest
@@ -476,23 +516,20 @@ class VirtualMachine{
                 // PUSH init-params
                 // INIT a A
                 // PUSHA a
-
                 // get a's value from stack
                 // STORE identifier TYPE
                 val identifier = ir.dest
-                var type: String? = ir.src
+                var type: String = ir.src
                 val item = pop()
                 if(type.equals("")){
-                    // 去符号表中查找类型
-                    type = symbolTable.lookup(identifier)
+                    type = item.type
                 }
                 // 这种表达式可以的
-                type?.let { store(identifier, it, item.value) }
+                // type?.let { store(identifier, it, item.value) }
+                store(identifier, type, item.value)
             }
             "LOAD" ->{
-                // a
-                // POPA a
-                // LOAD a
+                // LOAD == PUSHA
                 val identifier = ir.dest
                 val item = load(identifier)
                 if(item!= null){
@@ -507,6 +544,18 @@ class VirtualMachine{
                 val identifier = ir.dest
                 push(identifier, "int")
             }
+            "PUSHA"->{
+                // LOAD == PUSHA
+                val identifier = ir.dest
+                val item = load(identifier)
+                if(item!= null){
+                    push(item)
+                }
+                else{
+                    // error:变量未定义
+                    println("error:变量未定义")
+                }
+            }
             "PUSHF" ->{
                 val identifier = ir.dest
                 push(identifier, "float")
@@ -520,7 +569,9 @@ class VirtualMachine{
                 push(identifier, "string")
             }
             "POP" ->{
-                pop()
+                val identifier = ir.dest
+                var value = pop()
+
             }
             //
             "MOV" ->{
@@ -627,34 +678,64 @@ class VirtualMachine{
             }
             "JMP" ->{
                 val label = ir.dest
-                val pos : Int? = labelMap[label]
-                if(pos != null){
-                    programCounter = pos - 1
-                }
+                val pos = labelMap[label] ?: programCounter + 1
+                jump(pos - 1)
             }
             "JMPF" ->{
                 val label = ir.dest
-                val pos : Int? = labelMap[label]
+                val pos = labelMap[label] ?: programCounter + 1
                 val temp = pop()
                 val res = temp.value.toBoolean()
-                if(!res && pos != null){
-                    programCounter = pos - 1
+                if(!res){
+                    jump(pos - 1)
                 }
             }
             "JMPT" ->{
                 val label = ir.dest
-                val pos : Int? = labelMap[label]
+                val pos = labelMap[label] ?: programCounter + 1
                 val temp = pop()
                 val res = temp.value.toBoolean()
-                if(res && pos != null){
-                    programCounter = pos - 1
+                if(res){
+                    jump(pos - 1)
                 }
             }
             "CALL" ->{
                 val funcName = ir.dest
+                stack.push(currentFrame)
+                currentFrame = StackFrame()
                 if(lookupFunc(funcName)){
                     excuteBuiltinFunc(funcName)
                 }
+                else{
+                    // return时，pc在外面自己会++的，所以保存本语句的pc即可
+                    val retAddr = programCounter
+                    retReg = retAddr
+                    val pos = labelMap[funcName] ?: programCounter + 1
+                    jump(pos - 1)
+                }
+            }
+            "PARAM" ->{
+                val lastFrame = stack.peek()
+                val paramVal = lastFrame.pop()
+                val paramName = ir.dest
+                val paramType = ir.src
+                store(paramName, paramType, paramVal.value)
+            }
+            "RET" -> {
+                // get return value
+                val retVal = pop()
+                // clear stack
+                currentFrame = stack.pop()
+                // push retVal
+                push(retVal)
+                // jump to return address
+                jump(retReg)
+            }
+            "FIELD"->{
+                var initVal = pop()
+                val fieldName = ir.dest
+                val fieldType = ir.src
+                store(fieldName, fieldType, initVal.value)
             }
 
         }

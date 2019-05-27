@@ -2,6 +2,30 @@ package main
 enum class Test{
     CLASS1, FIELD1, METHOD1
 }
+
+//似乎不该有这两个类，应该在编译期把未知符号解决掉
+// namespace
+class PackageStatement: Statement{
+    lateinit var packageName : String
+    constructor(pkgName: String): super(Token("package")){
+        this.packageName = pkgName
+    }
+
+    override fun toString(): String {
+        return "PackageStatement:$packageName"
+    }
+}
+
+class ImportStatement: Statement{
+    lateinit var packageName : String
+    constructor(pkgName: String): super(Token("package")){
+        this.packageName = pkgName
+    }
+
+    override fun toString(): String {
+        return "ImportStatement:$packageName"
+    }
+}
 fun main(){
     var x:Int? = null
 

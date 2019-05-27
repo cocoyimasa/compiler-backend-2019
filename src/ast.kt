@@ -77,13 +77,18 @@ class LambdaExpression : Expression{
     lateinit var returnType : Token
     var arguments : ArrayList<Argument> = ArrayList()
     lateinit var block: Block
+    // 无返回，则需生成空返回语句
+    lateinit var retSt: Statement
 
     constructor(params: ArrayList<Argument>,
-                returnType : Token, block: Block)
+                returnType : Token,
+                block: Block,
+                retSt: Statement)
             : super(Token("LambdaExpression")) {
         this.arguments.addAll(params)
         this.returnType = returnType
         this.block = block
+        this.retSt = retSt
     }
     override fun accept(codeGenerator: CodeGenerator){
         codeGenerator.visit(this)
@@ -100,6 +105,7 @@ class LambdaExpression : Expression{
 
 class Block(value: Token) : Statement(value){
     var statements: ArrayList<Statement> = ArrayList()
+//    var returns : ArrayList<ReturnStatement> = ArrayList()
     constructor(statements: ArrayList<Statement>) : this(Token("block")){
         this.statements.addAll(statements)
     }
@@ -256,9 +262,11 @@ class BreakStatement : Statement{
 }
 
 class ReturnStatement : Statement{
-    lateinit var returnExp: Expression
-    constructor(returnExp: Expression) : super(Token("return")){
+    var returnExp: Expression? = null
+    lateinit var returnType: String
+    constructor(returnExp: Expression? = null, returnType: String = "void") : super(Token("return")){
         this.returnExp = returnExp
+        this.returnType = returnType
     }
     override fun accept(codeGenerator: CodeGenerator){
         codeGenerator.visit(this)
@@ -274,14 +282,19 @@ open class FunctionStatement : Statement{
     lateinit var returnType : Token
     var arguments : ArrayList<Argument> = ArrayList()
     lateinit var block: Block
+    // 如果函数没有return语句，需要加一条空的返回语句
+    // 如果有，直接存上
+    lateinit var retSt: Statement
 
     constructor(funcName: Token, params: ArrayList<Argument>,
-                returnType : Token, block: Block)
+                returnType : Token, block: Block,
+                retSt: Statement)
             : super(Token("function")) {
         this.funcName = funcName
         this.arguments.addAll(params)
         this.returnType = returnType
         this.block = block
+        this.retSt = retSt
     }
 
     override fun accept(codeGenerator: CodeGenerator){
@@ -296,10 +309,17 @@ open class FunctionStatement : Statement{
         return "Function:$funcName:($sb)$returnType:$block"
     }
 }
+
+interface IFunctionCall{
+    var funcName : Token
+    var params : ArrayList<Expression>
+
+    fun noParam() : Boolean;
+}
 // FunctionCall is a statement, and also it is an Expression
-class FunctionCallExp : Expression{
-    lateinit var funcName : Token
-    var params : ArrayList<Expression> = ArrayList()
+class FunctionCallExp : Expression, IFunctionCall{
+    override var funcName : Token
+    override var params : ArrayList<Expression> = ArrayList()
     constructor(funcName : Token,
                 params : ArrayList<Expression>):
             super(Token("FunctionCall")){
@@ -307,7 +327,7 @@ class FunctionCallExp : Expression{
         this.params.addAll(params)
     }
 
-    fun noParam() : Boolean{
+    override fun noParam() : Boolean{
         return params.size == 0
     }
 
@@ -324,9 +344,9 @@ class FunctionCallExp : Expression{
     }
 }
 
-class FunctionCall : Statement{
-    lateinit var funcName : Token
-    var params : ArrayList<Expression> = ArrayList()
+class FunctionCall : Statement, IFunctionCall{
+    override var funcName : Token
+    override var params : ArrayList<Expression> = ArrayList()
     constructor(funcName : Token,
                 params : ArrayList<Expression>):
             super(Token("FunctionCall")){
@@ -334,7 +354,7 @@ class FunctionCall : Statement{
         this.params.addAll(params)
     }
 
-    fun noParam() : Boolean{
+    override fun noParam() : Boolean{
         return params.size == 0
     }
 
@@ -383,8 +403,10 @@ class MethodStatement : FunctionStatement{
                 modifier: ArrayList<Token>,
                 funcName: Token,
                 params: ArrayList<Argument>,
-                returnType : Token, block: Block)
-            : super(funcName, params, returnType, block) {
+                returnType : Token,
+                block: Block,
+                retSt: Statement)
+            : super(funcName, params, returnType, block, retSt) {
         this.className = className
         this.accessLevel = accessLevel
         modifier.addAll(modifier)
@@ -404,6 +426,7 @@ class MethodStatement : FunctionStatement{
 }
 
 class UserDefinedClassSt : Statement{
+    lateinit var pkgName : String
     lateinit var className : Token
     lateinit var superClass : Token
     var superInterfaces : ArrayList<Token> = arrayListOf()
@@ -412,12 +435,31 @@ class UserDefinedClassSt : Statement{
 
     constructor():super(Token("class"))
 
+    constructor(pkgName : String,
+                className : Token,
+                superClass : Token,
+                superInterfaces : ArrayList<Token>,
+                fields : ArrayList<FieldStatement>,
+                methods : ArrayList<MethodStatement>
+                ):this(){
+        this.pkgName = pkgName
+        this.className = className
+        this.superClass = superClass
+        this.superInterfaces.addAll(superInterfaces)
+        this.fields.addAll(fields)
+        this.methods.addAll(methods)
+    }
+
+    fun fullName(): String{
+        return "$pkgName.$className"
+    }
+
     override fun accept(codeGenerator: CodeGenerator){
         codeGenerator.visit(this)
     }
 
     override fun toString(): String {
-        return "UserDefinedClassSt:"
+        return "UserDefinedClassSt:$className:$superClass,$superInterfaces"
     }
 }
 

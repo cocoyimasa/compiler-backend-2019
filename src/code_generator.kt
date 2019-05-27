@@ -22,6 +22,8 @@ enum class S{
     NOT, NEG, EQ, UNEQ, LT, GT, LE, GE, AND, OR,
     // 9.function instructions
     FUNC, PARAM, RET, CALL,
+    // 10.
+    FIELD, METHOD,
 }
 
 class IR{
@@ -83,36 +85,44 @@ class CodeGenerator{
     fun label():String{
         return (id++).toString()
     }
+
+    fun defineLabel(labelPrefix: String = "Label_X"): String {
+        return "${labelPrefix}_${label()}"
+    }
+
     fun visit(node: Node){
         for(elem in node.elems){
             elem.accept(this)
         }
     }
-    fun visit(exp: Expression): IR {
+    fun visit(exp: Expression){
         var ir = IR()
-
         when(exp.value.type){
+            "void" -> return // 不生成语句
             "boolean" -> ir = IR("BCONST", exp.value.str)
             "int" -> ir = IR("ICONST", exp.value.str)
             "float" -> ir = IR("FCONST", exp.value.str)
             "string" -> ir = IR("STRING", exp.value.str)
             "identifier" -> ir = IR("LOAD", exp.value.str)
-            else -> ir = IR("LOADA", exp.value.str)
+            else -> ir = IR("LOAD", exp.value.str)
         }
-
         irCodeList.add(ir)
-
-        return ir
     }
-    fun visit(st: Statement): IR{
-        var ir = IR()
-
+    fun visit(st: Statement){
         for(elem in st.elems){
             elem.accept(this)
         }
-        return ir
     }
     fun visit(assignStatement: AssignStatement){
+        // for example:
+        // a : Int = func(10,100)
+        // generate code:
+        // push 100
+        // push 10
+        // CALL func
+        // func......
+        // RET
+        // STORE a Int(隐含操作：POP RetVal)
         val varName = assignStatement.varName
         val varType = assignStatement.varType
         val exp = assignStatement.exp
@@ -192,6 +202,10 @@ class CodeGenerator{
         binaryExpression.leftExp.accept(this)
         binaryExpression.rightExp.accept(this)
         when(binaryExpression.operator.str){
+            "+" -> ir = IR("ADD")
+            "-" -> ir = IR("SUB")
+            "*" -> ir = IR("MUL")
+            "/" -> ir = IR("DIV")
             ">" -> ir = IR("GT")
             ">=" -> ir = IR("GE")
             "<" -> ir = IR("LT")
@@ -200,6 +214,7 @@ class CodeGenerator{
             "!=" -> ir = IR("NEQ")
             "||" -> ir = IR("OR")
             "&&" -> ir = IR("AND")
+            else -> ir = IR(binaryExpression.operator.str)
         }
         irCodeList.add(ir)
         return ir
@@ -209,23 +224,63 @@ class CodeGenerator{
         irCodeList.add(ir)
     }
     fun visit(declaration: Declaration){
-        var ir = IR()
+        val ir = IR("")
         irCodeList.add(ir)
     }
+
+    fun visit(retSt: ReturnStatement){
+        retSt.returnExp?.accept(this)
+        val ir = IR("RET")
+        irCodeList.add(ir)
+    }
+
+    fun visit(breakSt: BreakStatement){
+        // 获取循环的end标签
+        // getLoopEndLabel
+        var label:String = ""
+        val ir = IR("JMP", label)
+        irCodeList.add(ir)
+    }
+
+    fun visit(argument: Argument){
+        val argName = argument.name.str
+        var argType = argument.type.str
+        irCodeList.add(IR("PARAM", argName, argType))
+    }
+
     fun visit(functionStatement: FunctionStatement){
-        var ir = IR()
+        val funcName = functionStatement.funcName.str
+        val args = functionStatement.arguments
+        val block = functionStatement.block
+        val retSt = functionStatement.retSt
+        irCodeList.add(IR("LABEL",funcName))
+
+        for(arg in args){
+            arg.accept(this)
+        }
+
+        block.accept(this)
+        retSt.accept(this)
+    }
+
+    fun visitFuncCall(functionCall: IFunctionCall ){
+        val funcName = functionCall.funcName.str
+        val params = functionCall.params
+
+        //参数反向压栈
+        for(i in params.size-1..0){
+            params[i].accept(this)
+        }
+        val ir = IR("CALL", funcName)
         irCodeList.add(ir)
     }
 
     fun visit(functionCall: FunctionCall){
-        val funcName = functionCall.funcName.str
-        val params = functionCall.params
+        visitFuncCall(functionCall)
+    }
 
-        for(p in params){
-            p.accept(this)
-        }
-        val ir = IR("CALL", funcName)
-        irCodeList.add(ir)
+    fun visit(functionCall: FunctionCallExp){
+        visitFuncCall(functionCall)
     }
 
     fun visit(block: Block){
@@ -233,6 +288,71 @@ class CodeGenerator{
         sts.forEach {
             st -> st.accept(this@CodeGenerator)
         }
+    }
+
+    fun visit(userDefinedClassSt: UserDefinedClassSt){
+        // LABEL className
+        // LABEL className::className
+        // PARAM this
+        // PARAM X
+        // PARAM Y
+        // PARAM Z
+        // 此时对象成为一个Dict
+        // this = Map
+        // PUSH VAL1
+        // FIELD className::NAME1 TYPE(this[NAME1] = VAL1)
+        // PUSH VAL2
+        // FIELD className::NAME2 TYPE(this[NAME2] = VAL2)
+        // PUSH VAL3
+        // FIELD className::NAME2 TYPE(this[NAME3] = VAL3)
+        // LOAD X
+        // STORE className::NAME1 TYPE
+        // LOAD Y
+        // STORE className::NAME2 TYPE
+        // RET this
+        // METHOD className::A
+        // PARAM this
+    }
+
+    fun visit(newObjectExp: NewObjectExp){
+        val params = newObjectExp.params
+        val className = newObjectExp.className
+        //参数反向压栈
+        for(i in params.size-1..0){
+            params[i].accept(this)
+        }
+        //irCodeList.add(IR("LOAD", defineLabel("AnnoymousObject")))--方案暂时废弃
+
+        //"Map()"暂时将对象表示为Map类型，这样属性访问就变成了Map[attr]
+        //用库函数建立Map
+        irCodeList.add(IR("PUSHA", "Map()"))
+        val ir = IR("CALL", "$className::$className")
+        irCodeList.add(ir)
+    }
+
+    fun visit(methodStatement: MethodStatement){
+
+    }
+
+    fun visitField(obj:String, fieldStatement: FieldStatement){
+        val className = fieldStatement.className.str
+        val fieldName = fieldStatement.fieldName.str
+        val fieldType = fieldStatement.fieldType.str
+        val initValue = fieldStatement.initValue
+
+        initValue?.accept(this)
+
+        irCodeList.add(IR("FIELD", "$obj::$fieldName", fieldType))
+    }
+    fun visit(fieldStatement: FieldStatement){
+        val className = fieldStatement.className.str
+        val fieldName = fieldStatement.fieldName.str
+        val fieldType = fieldStatement.fieldType.str
+        val initValue = fieldStatement.initValue
+
+        initValue?.accept(this)
+
+        irCodeList.add(IR("FIELD", "$className::$fieldName", fieldType))
     }
 
     override fun toString() : String{

@@ -15,14 +15,16 @@ fun main(){
     *   println(testObj)
     * }
     * class User{
-    * field name:int = 10
-    * constructor(val:int){
-    *   name = val
-    * }
-    * method testMethod(val:int){
-    *   name = 100
-    *   print(val)
-    * }
+    *
+    *   field name:int = 10
+    *   constructor(val:int){
+    *       name = val
+    *   }
+    *
+    *   method testMethod(val:int){
+    *       name = 100
+    *       print(val)
+    *   }
     * */
     var node = Node(Token("program"))
     node.elems.add(FunctionStatement(

@@ -4,6 +4,15 @@ import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
 
+fun isPrimitive(type:String): Boolean {
+    if(type == "int"
+            || type == "float"
+            || type == "boolean"
+    ){
+        return true
+    }
+    return false
+}
 class ClassObject{
     var self = mutableMapOf<String, Any>()
     var className : String = ""
@@ -204,16 +213,6 @@ class VirtualMachine{
         return res
     }
 
-    fun isPrimitive(type:String): Boolean {
-        if(type == "int"
-            || type == "float"
-            || type == "boolean"
-        ){
-            return true
-        }
-        return false
-    }
-
     // load现在stack上查找变量，如果发现是引用类型，则去堆上取值
     fun load(ref: String): MemItem?{
         val item = currentFrame[ref]
@@ -262,13 +261,6 @@ class VirtualMachine{
 
     // 把基础类型和引用类型在stack上做个索引
     fun store(ref: String, type: String, value: Any){
-        // 引用类型在堆上的创建和成员变量相同
-        // 成员变量创建直接在堆上 对象名.成员变量
-        // 而对于引用类型user = new User(name, age, sex)来说
-        // 前面new指令已经在堆上创建了user.name, user.age, user.sex
-        // 这样对象的实现可以很简单，不过就是个命名空间
-        // 所以这里只需要存上user和user的类型即可
-        // 需要访问field的时候，直接加上obj[fieldname]去堆上找就行了。反正不可能重名，重名必报错。
         if(isPrimitive(type)){
             currentFrame[ref] = MemItem(name=ref, type=type, value = value)
         }
@@ -538,13 +530,8 @@ class VirtualMachine{
                     push(item)
                 }
                 else{
-                    // error:变量未定义
-                    println("error:变量未定义")
+                    println("加载 $identifier 失败...")
                 }
-            }
-            "PUSH" ->{
-                val identifier = ir.dest
-                push(identifier, "int")
             }
             "PUSHA"->{
                 // LOAD == PUSHA
@@ -554,26 +541,36 @@ class VirtualMachine{
                     push(item)
                 }
                 else{
-                    // error:变量未定义
-                    println("error:变量未定义")
+                    println("加载 $identifier 失败...")
                 }
             }
+            "PUSH" ->{
+                val item = MemItem(value = ir.dest,type = "int")
+                push(item)
+            }
             "PUSHF" ->{
-                val identifier = ir.dest
-                push(identifier, "float")
+                val item = MemItem(value =ir.dest, type="float")
+                push(item)
             }
             "PUSHB" ->{
-                val identifier = ir.dest
-                push(identifier, "boolean")
+                val item = MemItem(value = ir.dest, type = "boolean")
+                push(item)
             }
             "PUSHS" ->{
-                val identifier = ir.dest
-                push(identifier, "string")
+                val item = MemItem(value = ir.dest, type = "string")
+                push(item)
             }
-            "POP" ->{
+            "POPA" ->{
+                // POPA Ref ==STORE Ref
                 val identifier = ir.dest
-                var value = pop()
-
+                var type: String = ir.src
+                var item = pop()
+                if(type.equals("")){
+                    type = item.type
+                }
+                // 这种表达式可以的
+                // type?.let { store(identifier, it, item.value) }
+                store(identifier, type, item.value)
             }
             //
             "MOV" ->{

@@ -6,8 +6,8 @@ import java.io.File
 enum class S{
     // 1.heap instructions
     LOAD, STORE, NEW,
-    // 2.stack instructions
-    PUSH, POP, PUSHF, POPF, PUSHS, POPS, PUSHB, POPB,
+    // 2.stack instructions, if no registers, pop in no sense
+    PUSH, POP, PUSHF, POPF, PUSHS, POPS, PUSHB, POPB,PUSHA, POPA,
     // 3.constant instructions
     ICONST, FCONST, STRING, BCONST,
     // 4.label instructions
@@ -100,12 +100,12 @@ class CodeGenerator{
         var ir = IR()
         when(exp.value.type){
             "void" -> return // 不生成语句
-            "boolean" -> ir = IR("BCONST", exp.value.str)
-            "int" -> ir = IR("ICONST", exp.value.str)
-            "float" -> ir = IR("FCONST", exp.value.str)
-            "string" -> ir = IR("STRING", exp.value.str)
-            "identifier" -> ir = IR("LOAD", exp.value.str)
-            else -> ir = IR("LOAD", exp.value.str)
+            "boolean" -> ir = IR("PUSHB", exp.value.str)
+            "int" -> ir = IR("PUSH", exp.value.str)
+            "float" -> ir = IR("PUSHF", exp.value.str)
+            "string" -> ir = IR("PUSHS", exp.value.str)
+            "identifier" -> ir = IR("PUSHA", exp.value.str)
+            else -> ir = IR("PUSHA", exp.value.str)
         }
         irCodeList.add(ir)
     }
@@ -124,23 +124,27 @@ class CodeGenerator{
         // CALL func
         // func......
         // RET
-        // STORE a Int(隐含操作：POP RetVal)
+        // PUSHA a(隐含操作：POP RetVal)
 
         // a : Object = new Class(10,10)
-        // PUSHA a
-        // POPA
-        // NEW Object
-        //
+        // NEW CLASS
+        // PUSH 10
+        // PUSH 10
+        // CALL CLASS::CLASS()
+        //....
+        // RET this
+        // STORE a Int(隐含操作：POP RetVal)
         val varName = assignStatement.varName
         val varType = assignStatement.varType
         val exp = assignStatement.exp
         exp.accept(this)
 
+
         if(varType == null){
             irCodeList.add(IR("STORE", varName.str))
         }
         else{
-            irCodeList.add(IR("STORE", varName.str, varType?.str))
+            irCodeList.add(IR("STORE", varName.str, varType.str))
         }
     }
     fun visit(ifSt: IfStatement){
@@ -462,8 +466,13 @@ class CodeGenerator{
     fun toFile(filename: String = "compiled.asm"){
         val file = File(filename)
         //指定文件不存在就创建同名文件
-        if (!file.exists())
+        if (file.exists()){
+            file.delete()
             file.createNewFile()
+        }
+        else{
+            file.createNewFile()
+        }
         val randomAccessFile : RandomAccessFile = RandomAccessFile(file, "rw")
         randomAccessFile.seek(0)
         for(ir in irCodeList){

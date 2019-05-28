@@ -284,11 +284,11 @@ open class FunctionStatement : Statement{
     lateinit var block: Block
     // 如果函数没有return语句，需要加一条空的返回语句
     // 如果有，直接存上
-    lateinit var retSt: Statement
+    lateinit var retSt: ReturnStatement
 
     constructor(funcName: Token, params: ArrayList<Argument>,
                 returnType : Token, block: Block,
-                retSt: Statement)
+                retSt: ReturnStatement)
             : super(Token("function")) {
         this.funcName = funcName
         this.arguments.addAll(params)
@@ -379,6 +379,7 @@ class FieldStatement : Statement{
     constructor(className : Token, fieldName : Token,
                 fieldType : Token, initValue : Expression?)
             : super(Token("field")){
+        this.className = className
         this.fieldName = fieldName
         this.fieldType = fieldType
         this.initValue = initValue
@@ -405,7 +406,7 @@ class MethodStatement : FunctionStatement{
                 params: ArrayList<Argument>,
                 returnType : Token,
                 block: Block,
-                retSt: Statement)
+                retSt: ReturnStatement)
             : super(funcName, params, returnType, block, retSt) {
         this.className = className
         this.accessLevel = accessLevel
@@ -431,6 +432,7 @@ class UserDefinedClassSt : Statement{
     lateinit var superClass : Token
     var superInterfaces : ArrayList<Token> = arrayListOf()
     var fields : ArrayList<FieldStatement> = arrayListOf()
+    var constructors : ArrayList<MethodStatement> = arrayListOf()
     var methods : ArrayList<MethodStatement> = arrayListOf()
 
     constructor():super(Token("class"))
@@ -440,6 +442,7 @@ class UserDefinedClassSt : Statement{
                 superClass : Token,
                 superInterfaces : ArrayList<Token>,
                 fields : ArrayList<FieldStatement>,
+                constructors : ArrayList<MethodStatement>,
                 methods : ArrayList<MethodStatement>
                 ):this(){
         this.pkgName = pkgName
@@ -447,6 +450,7 @@ class UserDefinedClassSt : Statement{
         this.superClass = superClass
         this.superInterfaces.addAll(superInterfaces)
         this.fields.addAll(fields)
+        this.constructors.addAll(constructors)
         this.methods.addAll(methods)
     }
 

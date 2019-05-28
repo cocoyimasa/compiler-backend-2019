@@ -94,6 +94,7 @@ class CodeGenerator{
         for(elem in node.elems){
             elem.accept(this)
         }
+        irCodeList.add(IR("LABEL", "END"))
     }
     fun visit(exp: Expression){
         var ir = IR()
@@ -117,16 +118,22 @@ class CodeGenerator{
         // for example:
         // a : Int = func(10,100)
         // generate code:
+        // PUSHA a
         // push 100
         // push 10
         // CALL func
         // func......
         // RET
         // STORE a Int(隐含操作：POP RetVal)
+
+        // a : Object = new Class(10,10)
+        // PUSHA a
+        // POPA
+        // NEW Object
+        //
         val varName = assignStatement.varName
         val varType = assignStatement.varType
         val exp = assignStatement.exp
-
         exp.accept(this)
 
         if(varType == null){
@@ -185,7 +192,7 @@ class CodeGenerator{
         irCodeList.add(IR("LABEL", labelTrue))
     }
     fun visit(forSt: ForStatement): IR{
-        var ir = IR()
+        val ir = IR()
         return ir
     }
     fun visit(unaryExpression: UnaryExpression): IR{
@@ -220,7 +227,7 @@ class CodeGenerator{
         return ir
     }
     fun visit(lambdaExpression: LambdaExpression){
-        var ir = IR()
+        val ir = IR()
         irCodeList.add(ir)
     }
     fun visit(declaration: Declaration){
@@ -230,21 +237,26 @@ class CodeGenerator{
 
     fun visit(retSt: ReturnStatement){
         retSt.returnExp?.accept(this)
+        val retType = retSt.returnType
+
         val ir = IR("RET")
+        if(retType == "void"){
+            ir.dest = "void"
+        }
         irCodeList.add(ir)
     }
 
     fun visit(breakSt: BreakStatement){
         // 获取循环的end标签
         // getLoopEndLabel
-        var label:String = ""
+        val label:String = ""
         val ir = IR("JMP", label)
         irCodeList.add(ir)
     }
 
     fun visit(argument: Argument){
         val argName = argument.name.str
-        var argType = argument.type.str
+        val argType = argument.type.str
         irCodeList.add(IR("PARAM", argName, argType))
     }
 
@@ -268,9 +280,13 @@ class CodeGenerator{
         val params = functionCall.params
 
         //参数反向压栈
-        for(i in params.size-1..0){
-            params[i].accept(this)
+        val paramsR = arrayListOf<Expression>()
+        paramsR.addAll(params)
+
+        for(param in paramsR){
+            param.accept(this)
         }
+
         val ir = IR("CALL", funcName)
         irCodeList.add(ir)
     }
@@ -290,15 +306,52 @@ class CodeGenerator{
         }
     }
 
+    fun visitConstructor(className: String,
+                         fields: ArrayList<FieldStatement>,
+                         ctor : MethodStatement? = null){
+        if(ctor == null){
+            irCodeList.add(IR("LABEL", "$className::$className"))
+        }
+        else{
+            val args = ctor.arguments
+            val len = args.size
+            val sb = StringBuffer()
+            for(arg in args){
+                sb.append(arg.type.str + "_")
+            }
+            // className::className_len_type_
+            irCodeList.add(IR("LABEL", "$className::${className}_${len}_$sb"))
+        }
+        irCodeList.add(IR("PARAM", "this", className))
+
+        ctor?.let{
+            val args = ctor.arguments
+
+            for(arg in args){
+                arg.accept(this)
+            }
+        }
+
+        for(field in fields){
+            field.accept(this)
+        }
+
+        ctor?.let{
+            val block = ctor.block
+            block.accept(this)
+        }
+
+        irCodeList.add(IR("PUSHA", "this")) // 加载this到当前栈上
+        irCodeList.add(IR("RET"))
+    }
+
     fun visit(userDefinedClassSt: UserDefinedClassSt){
         // LABEL className
         // LABEL className::className
-        // PARAM this
-        // PARAM X
-        // PARAM Y
-        // PARAM Z
-        // 此时对象成为一个Dict
-        // this = Map
+        // PARAM this className (this = Map,此时对象成为一个Dict)
+        // PARAM X TYPE
+        // PARAM Y TYPE
+        // PARAM Z TYPE
         // PUSH VAL1
         // FIELD className::NAME1 TYPE(this[NAME1] = VAL1)
         // PUSH VAL2
@@ -312,26 +365,68 @@ class CodeGenerator{
         // RET this
         // METHOD className::A
         // PARAM this
+        val className = userDefinedClassSt.className.str
+        val fields= userDefinedClassSt.fields
+        val constructors = userDefinedClassSt.constructors
+        val methods = userDefinedClassSt.methods
+        irCodeList.add(IR("LABEL", className))
+        // 生成 default constructor
+        visitConstructor(className, fields)
+        // 生成其他 constructor
+        for(ctor in constructors){
+            visitConstructor(className, fields, ctor)
+        }
+
+        for(method in methods){
+            method.accept(this)
+        }
+
     }
 
     fun visit(newObjectExp: NewObjectExp){
         val params = newObjectExp.params
-        val className = newObjectExp.className
+        val className = newObjectExp.className.str
         //参数反向压栈
-        for(i in params.size-1..0){
-            params[i].accept(this)
-        }
-        //irCodeList.add(IR("LOAD", defineLabel("AnnoymousObject")))--方案暂时废弃
+        val paramsR = arrayListOf<Expression>()
+        paramsR.addAll(params)
 
-        //"Map()"暂时将对象表示为Map类型，这样属性访问就变成了Map[attr]
-        //用库函数建立Map
-        irCodeList.add(IR("PUSHA", "Map()"))
-        val ir = IR("CALL", "$className::$className")
+        for(param in paramsR){
+            param.accept(this)
+        }
+        val len = params.size
+        val sb = StringBuffer()
+        // TODO: bug: param可能类型是identifier
+        for(param in params){
+            sb.append(param.value.type + "_")
+        }
+        val tempObj = defineLabel("AnnoymousObject")
+        irCodeList.add(IR("NEW", tempObj, className))
+        irCodeList.add(IR("PUSHA", tempObj)) // 加载到当前栈上
+        val ir = if(len == 0){
+            IR("CALL", "$className::$className")
+        }
+        else{
+            IR("CALL", "$className::${className}_${len}_$sb")
+        }
+
         irCodeList.add(ir)
     }
 
     fun visit(methodStatement: MethodStatement){
+        val className = methodStatement.className.str
+        val funcName = methodStatement.funcName.str
+        val args = methodStatement.arguments
+        val block = methodStatement.block
+        val retSt = methodStatement.retSt
+        irCodeList.add(IR("LABEL","$className::$funcName"))
 
+        irCodeList.add(IR("PARAM", "this", className))
+        for(arg in args){
+            arg.accept(this)
+        }
+
+        block.accept(this)
+        retSt.accept(this)
     }
 
     fun visitField(obj:String, fieldStatement: FieldStatement){
@@ -352,7 +447,7 @@ class CodeGenerator{
 
         initValue?.accept(this)
 
-        irCodeList.add(IR("FIELD", "$className::$fieldName", fieldType))
+        irCodeList.add(IR("FIELD", fieldName, fieldType))
     }
 
     override fun toString() : String{

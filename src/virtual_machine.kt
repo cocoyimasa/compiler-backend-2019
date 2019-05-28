@@ -4,15 +4,35 @@ import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
 
+class ClassObject{
+    var self = mutableMapOf<String, Any>()
+    var className : String = ""
+    constructor(className:String = ""){
+        this.className = className
+    }
+    override fun toString(): String {
+        val sb = StringBuffer("$className@[")
+        for(item in self){
+            sb.append(item.key+"-")
+            sb.append(item.value.toString()+"-")
+        }
+        sb.append("]")
+        return sb.toString()
+    }
+}
+
 data class MemItem(var name : String = "",
-                     var value: String = "",
-                     var type : String = "") {}
+                     var value: Any= "",
+                     var type: String = "") {}
 
 class StackFrame{
+    lateinit var frameName :String
     var localVars = mutableMapOf<String, MemItem>()
     var stack : Stack<MemItem> = Stack()
 
-    constructor()
+    constructor(frameName:String = ""){
+        this.frameName = frameName
+    }
 
     fun push(item : MemItem){
         stack.push(item)
@@ -52,7 +72,7 @@ class VirtualMachine{
     var stack = Stack<StackFrame>()
     // runtime stack
     var runtimeStack: Stack<MemItem> = Stack()
-    var currentFrame = StackFrame()
+    var currentFrame = StackFrame("Global")
 
     // registers
     var retReg = 0
@@ -67,6 +87,8 @@ class VirtualMachine{
     }
 
     fun start(){
+        stack.push(StackFrame("__Main__"))
+        programCounter = labelMap["main"] ?: 0
         // init built-in type list
         val types = arrayOf("String", "Object")
         types.forEach {
@@ -234,11 +256,12 @@ class VirtualMachine{
 
     fun newObject(ref: String, type: String){
         // 类型检查应该放在编译期，这里直接开辟空间
-        heap[ref] = MemItem(name=ref, type=type)
+        val classObject = ClassObject(type)
+        store(ref, type, classObject)
     }
 
     // 把基础类型和引用类型在stack上做个索引
-    fun store(ref: String, type: String, value: String){
+    fun store(ref: String, type: String, value: Any){
         // 引用类型在堆上的创建和成员变量相同
         // 成员变量创建直接在堆上 对象名.成员变量
         // 而对于引用类型user = new User(name, age, sex)来说
@@ -251,16 +274,14 @@ class VirtualMachine{
         }
         else{
             currentFrame[ref] = MemItem(name=ref, type=type) // 引用类型只作一个类型索引
-            heap[ref] = MemItem(name=ref, type=type, value = value) // 无值添加值，有值则更新
-            // 如果是在堆上存Map，存数组，这里就完全存不了了。。。
-            // 所以应该修改存储类型
+            heap[ref] = MemItem(name=ref, type=type, value = value)
             // heap[ref] = Object{value=[a=3,b=2,c=1]}
             // 所以ref.b会被转化为heap[ref][b]
             // 方法调用ref.func会被转化为Class::func(ref,....)
         }
     }
 
-    fun storeHeap(ref: String, type: String, value: String){
+    fun storeHeap(ref: String, type: String, value: Any){
         currentFrame[ref] = MemItem(name=ref, type=type) // 引用类型只作一个类型索引
         heap[ref] = MemItem(name=ref, type=type, value = value) // 无值添加值，有值则更新
     }
@@ -317,8 +338,8 @@ class VirtualMachine{
         item.type = "int"
 
         var res = 0
-        val a = temp2.value.toInt()
-        val b = temp1.value.toInt()
+        val a = (temp2.value as String).toInt()
+        val b = (temp1.value as String).toInt()
 
         when(op){
             "+"-> res = a + b
@@ -339,18 +360,9 @@ class VirtualMachine{
         val a: Float
         val b: Float
 
-        a = if(temp1.type == ("float")){
-            temp1.value.toFloat()
-        }
-        else{
-            temp1.value.toInt().toFloat()
-        }
+        a = (temp2.value as String).toFloat()
 
-        b = if(temp2.type == ("float")){
-            temp2.value.toFloat()
-        } else{
-            temp2.value.toInt().toFloat()
-        }
+        b = (temp1.value as String).toFloat()
 
         when(op){
             "+"-> res = a + b
@@ -420,19 +432,9 @@ class VirtualMachine{
         val a:Float
         val b:Float
 
-        a = if(temp1.type == "float"){
-            temp1.value.toFloat()
-        }
-        else{
-            temp1.value.toInt().toFloat()
-        }
+        a = (temp1.value as String).toFloat()
 
-        b = if(temp2.type == "float"){
-            temp2.value.toFloat()
-        }
-        else{
-            temp2.value.toInt().toFloat()
-        }
+        b = (temp2.value as String).toFloat()
         // 参数计算顺序相反，因为数据入栈是前面的数先入栈，所以出栈之后是第二个
         when(op){
             "<" -> return b < a
@@ -461,21 +463,21 @@ class VirtualMachine{
     }
 
     fun andExp(temp1:MemItem, temp2: MemItem) : Boolean {
-        val a : Boolean = temp1.value.toBoolean()
-        val b : Boolean = temp2.value.toBoolean()
+        val a : Boolean = (temp2.value as String).toBoolean()
+        val b : Boolean = (temp1.value as String).toBoolean()
 
-        return temp1.type == temp2.type && a && b
+        return temp1.type == temp2.type && (a && b)
     }
 
     fun orExp(temp1:MemItem, temp2: MemItem) : Boolean {
-        val a : Boolean = temp1.value.toBoolean()
-        val b : Boolean = temp2.value.toBoolean()
+        val a : Boolean = (temp2.value as String).toBoolean()
+        val b : Boolean = (temp1.value as String).toBoolean()
 
-        return temp1.type == temp2.type && a || b
+        return temp1.type == temp2.type && (a || b)
     }
 
     fun notExp(temp:MemItem) : Boolean {
-        val a : Boolean = temp.value.toBoolean()
+        val a : Boolean = (temp.value as String).toBoolean()
         return !a
     }
 
@@ -685,7 +687,7 @@ class VirtualMachine{
                 val label = ir.dest
                 val pos = labelMap[label] ?: programCounter + 1
                 val temp = pop()
-                val res = temp.value.toBoolean()
+                val res = (temp.value as String).toBoolean()
                 if(!res){
                     jump(pos - 1)
                 }
@@ -694,15 +696,13 @@ class VirtualMachine{
                 val label = ir.dest
                 val pos = labelMap[label] ?: programCounter + 1
                 val temp = pop()
-                val res = temp.value.toBoolean()
+                val res = (temp.value as String).toBoolean()
                 if(res){
                     jump(pos - 1)
                 }
             }
             "CALL" ->{
                 val funcName = ir.dest
-                stack.push(currentFrame)
-                currentFrame = StackFrame()
                 if(lookupFunc(funcName)){
                     excuteBuiltinFunc(funcName)
                 }
@@ -712,6 +712,8 @@ class VirtualMachine{
                     retReg = retAddr
                     val pos = labelMap[funcName] ?: programCounter + 1
                     jump(pos - 1)
+                    stack.push(currentFrame)
+                    currentFrame = StackFrame()
                 }
             }
             "PARAM" ->{
@@ -722,20 +724,33 @@ class VirtualMachine{
                 store(paramName, paramType, paramVal.value)
             }
             "RET" -> {
-                // get return value
-                val retVal = pop()
+                // get return value, if dest is void, no return, and don't pop
+                val retType = ir.dest
+                var retVal: MemItem? = null
+                if(retType != "void"){
+                    retVal = pop()
+                }
+
                 // clear stack
                 currentFrame = stack.pop()
                 // push retVal
-                push(retVal)
+                retVal?.let { push(retVal) }
                 // jump to return address
-                jump(retReg)
+                if(currentFrame.frameName == "__Main__"){
+                    jump(labelMap["END"] ?: irArray.size - 1)
+                }else{
+                    jump(retReg)
+                }
             }
             "FIELD"->{
-                var initVal = pop()
+                val initVal = pop()
                 val fieldName = ir.dest
                 val fieldType = ir.src
-                store(fieldName, fieldType, initVal.value)
+
+                val thisRef = load("this") // heap[this] = heap[AnnoymousObj]
+                var thisRefVal = thisRef?.value as ClassObject
+                initVal.name = fieldName
+                thisRefVal.self[fieldName] = initVal //MemItem类型
             }
 
         }

@@ -42,6 +42,17 @@ fun main(){
     println(Test.CLASS1)
 
     println(Test.CLASS1 == Test.CLASS1)
+
+    var str : Any = "111"
+    println(str)
+
+    class A{
+        fun X(){
+            println("test A")
+        }
+    }
+    val obj = A()
+    obj.X()
 }
 /*
 var sts = ArrayList<Statement>()

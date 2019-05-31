@@ -2,10 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a31627ac-8270-4d6d-aa1c-7967a1e55c00" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/src/lexer.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/parser.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compiled.asm" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/compiler-backend-2019/META-INF/compiler-backend-2019.kotlin_module" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/compiler-backend-2019/META-INF/compiler-backend-2019.kotlin_module" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/code_generator.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/code_generator.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/annotation.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/annotation.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/token.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/token.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/virtual_machine.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/virtual_machine.kt" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -20,26 +22,32 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/virtual_machine.kt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="307">
-              <caret line="568" column="36" lean-forward="true" selection-start-line="568" selection-start-column="36" selection-end-line="568" selection-end-column="36" />
+            <state relative-caret-position="374">
+              <caret line="24" column="35" lean-forward="true" selection-start-line="24" selection-start-column="35" selection-end-line="24" selection-end-column="35" />
               <folding>
                 <element signature="n#!!block;n#irToString#0;n#!!block;n#VirtualMachine#0" />
                 <element signature="n#!!block;n#findAllLabels#0;n#!!block;n#VirtualMachine#0" />
                 <element signature="n#!!block;n#lookupFunc#0;n#!!block;n#VirtualMachine#0" />
                 <element signature="n#!!block;n#lookupTypeList#0;n#!!block;n#VirtualMachine#0" />
+                <element signature="n#!!block;n#jump#1;n#!!block;n#VirtualMachine#0" />
+                <element signature="n#!!block;n#jumpFalse#0;n#!!block;n#VirtualMachine#0" />
                 <element signature="n#!!block;n#callMethod#0;n#!!block;n#VirtualMachine#0" />
                 <element signature="n#!!block;n#addFloat#0;n#!!block;n#VirtualMachine#0" />
                 <element signature="n#!!block;n#subFloat#0;n#!!block;n#VirtualMachine#0" />
                 <element signature="n#!!block;n#mulFloat#0;n#!!block;n#VirtualMachine#0" />
                 <element signature="n#!!block;n#divFloat#0;n#!!block;n#VirtualMachine#0" />
+                <element signature="n#!!block;n#computeInt#0;n#!!block;n#VirtualMachine#0" />
+                <element signature="n#!!block;n#computeFloat#0;n#!!block;n#VirtualMachine#0" />
+                <element signature="n#!!block;n#add#0;n#!!block;n#VirtualMachine#0" />
                 <element signature="n#!!block;n#sub#0;n#!!block;n#VirtualMachine#0" />
                 <element signature="n#!!block;n#mul#0;n#!!block;n#VirtualMachine#0" />
                 <element signature="n#!!block;n#div#0;n#!!block;n#VirtualMachine#0" />
                 <element signature="n#!!block;n#eq#0;n#!!block;n#VirtualMachine#0" />
                 <element signature="n#!!block;n#uneq#0;n#!!block;n#VirtualMachine#0" />
+                <element signature="n#!!block;n#computeCompareExp#0;n#!!block;n#VirtualMachine#0" />
                 <element signature="n#!!block;n#lt#0;n#!!block;n#VirtualMachine#0" />
                 <element signature="n#!!block;n#gt#0;n#!!block;n#VirtualMachine#0" />
                 <element signature="n#!!block;n#le#0;n#!!block;n#VirtualMachine#0" />
@@ -49,11 +57,36 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/token.kt">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="119">
+              <caret line="7" selection-start-line="7" selection-end-line="7" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/playground.kt">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="17">
+              <caret line="26" column="5" selection-start-line="26" selection-start-column="5" selection-end-line="26" selection-end-column="5" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/symbols.kt">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-145" />
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/code_generator.kt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="85">
-              <caret line="6" column="26" lean-forward="true" selection-start-line="6" selection-start-column="26" selection-end-line="6" selection-end-column="26" />
+            <state relative-caret-position="-7302">
+              <caret line="25" column="18" selection-start-line="25" selection-start-column="18" selection-end-line="25" selection-end-column="18" />
             </state>
           </provider>
         </entry>
@@ -70,13 +103,20 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/ast.kt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="240">
+            <state relative-caret-position="-1369">
               <caret line="381" column="34" selection-start-line="381" selection-start-column="34" selection-end-line="381" selection-end-column="34" />
             </state>
           </provider>
         </entry>
       </file>
     </leaf>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Kotlin File" />
+      </list>
+    </option>
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
@@ -100,14 +140,17 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/README.md" />
-        <option value="$PROJECT_DIR$/src/annotation.kt" />
         <option value="$PROJECT_DIR$/src/ast.kt" />
         <option value="$PROJECT_DIR$/src/playground.kt" />
         <option value="$PROJECT_DIR$/src/main.kt" />
         <option value="$PROJECT_DIR$/compiled.asm" />
-        <option value="$PROJECT_DIR$/src/virtual_machine.kt" />
         <option value="$PROJECT_DIR$/src/code_generator.kt" />
+        <option value="$PROJECT_DIR$/README.md" />
+        <option value="$PROJECT_DIR$/src/annotation.kt" />
+        <option value="$PROJECT_DIR$/src/lexer.kt" />
+        <option value="$PROJECT_DIR$/src/parser.kt" />
+        <option value="$PROJECT_DIR$/src/token.kt" />
+        <option value="$PROJECT_DIR$/src/virtual_machine.kt" />
       </list>
     </option>
   </component>
@@ -134,11 +177,6 @@
             <path>
               <item name="compiler-backend-2019" type="b2602c69:ProjectViewProjectNode" />
               <item name="compiler-backend-2019" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="compiler-backend-2019" type="b2602c69:ProjectViewProjectNode" />
-              <item name="compiler-backend-2019" type="462c0819:PsiDirectoryNode" />
-              <item name="out" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="compiler-backend-2019" type="b2602c69:ProjectViewProjectNode" />
@@ -221,7 +259,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1558901908811</updated>
-      <workItem from="1558901910654" duration="43793000" />
+      <workItem from="1558901910654" duration="46825000" />
     </task>
     <task id="LOCAL-00001" summary="update readme">
       <created>1558903694031</created>
@@ -244,11 +282,25 @@
       <option name="project" value="LOCAL" />
       <updated>1559064301069</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="fix some instruction semantic">
+      <created>1559068375832</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1559068375832</updated>
+    </task>
+    <task id="LOCAL-00005" summary="fix some instruction semantic 1">
+      <created>1559068453396</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1559068453396</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="43793000" />
+    <option name="totallyTimeSpent" value="46825000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -300,7 +352,9 @@
     <MESSAGE value="update readme" />
     <MESSAGE value="fix annotations" />
     <MESSAGE value="add comments" />
-    <option name="LAST_COMMIT_MESSAGE" value="add comments" />
+    <MESSAGE value="fix some instruction semantic" />
+    <MESSAGE value="fix some instruction semantic 1" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix some instruction semantic 1" />
   </component>
   <component name="antWorkspaceConfiguration">
     <option name="IS_AUTOSCROLL_TO_SOURCE" value="false" />
@@ -309,23 +363,6 @@
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/compiler20190526.iml">
       <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/README.md">
-      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
-        <state split_layout="SPLIT">
-          <first_editor relative-caret-position="119">
-            <caret line="7" column="33" selection-start-line="7" selection-start-column="33" selection-end-line="7" selection-end-column="33" />
-          </first_editor>
-          <second_editor />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/annotation.kt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="68">
-          <caret line="6" column="31" lean-forward="true" selection-start-line="6" selection-start-column="31" selection-end-line="6" selection-end-column="31" />
-        </state>
-      </provider>
     </entry>
     <entry file="jar://$KOTLIN_BUNDLED$/lib/kotlin-stdlib-sources.jar!/kotlin/collections/TypeAliases.kt">
       <provider selected="true" editor-type-id="text-editor">
@@ -380,20 +417,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/playground.kt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-312">
-          <caret line="26" column="5" lean-forward="true" selection-start-line="26" selection-start-column="5" selection-end-line="26" selection-end-column="5" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/ast.kt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="240">
-          <caret line="381" column="34" selection-start-line="381" selection-start-column="34" selection-end-line="381" selection-end-column="34" />
-        </state>
-      </provider>
-    </entry>
     <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_40.jdk/Contents/Home/src.zip!/java/util/Stack.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="129">
@@ -425,37 +448,100 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/virtual_machine.kt">
+    <entry file="file://$PROJECT_DIR$/src/ast.kt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="307">
-          <caret line="568" column="36" lean-forward="true" selection-start-line="568" selection-start-column="36" selection-end-line="568" selection-end-column="36" />
-          <folding>
-            <element signature="n#!!block;n#irToString#0;n#!!block;n#VirtualMachine#0" />
-            <element signature="n#!!block;n#findAllLabels#0;n#!!block;n#VirtualMachine#0" />
-            <element signature="n#!!block;n#lookupFunc#0;n#!!block;n#VirtualMachine#0" />
-            <element signature="n#!!block;n#lookupTypeList#0;n#!!block;n#VirtualMachine#0" />
-            <element signature="n#!!block;n#callMethod#0;n#!!block;n#VirtualMachine#0" />
-            <element signature="n#!!block;n#addFloat#0;n#!!block;n#VirtualMachine#0" />
-            <element signature="n#!!block;n#subFloat#0;n#!!block;n#VirtualMachine#0" />
-            <element signature="n#!!block;n#mulFloat#0;n#!!block;n#VirtualMachine#0" />
-            <element signature="n#!!block;n#divFloat#0;n#!!block;n#VirtualMachine#0" />
-            <element signature="n#!!block;n#sub#0;n#!!block;n#VirtualMachine#0" />
-            <element signature="n#!!block;n#mul#0;n#!!block;n#VirtualMachine#0" />
-            <element signature="n#!!block;n#div#0;n#!!block;n#VirtualMachine#0" />
-            <element signature="n#!!block;n#eq#0;n#!!block;n#VirtualMachine#0" />
-            <element signature="n#!!block;n#uneq#0;n#!!block;n#VirtualMachine#0" />
-            <element signature="n#!!block;n#lt#0;n#!!block;n#VirtualMachine#0" />
-            <element signature="n#!!block;n#gt#0;n#!!block;n#VirtualMachine#0" />
-            <element signature="n#!!block;n#le#0;n#!!block;n#VirtualMachine#0" />
-            <element signature="n#!!block;n#ge#0;n#!!block;n#VirtualMachine#0" />
-          </folding>
+        <state relative-caret-position="-1369">
+          <caret line="381" column="34" selection-start-line="381" selection-start-column="34" selection-end-line="381" selection-end-column="34" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/code_generator.kt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="85">
-          <caret line="6" column="26" lean-forward="true" selection-start-line="6" selection-start-column="26" selection-end-line="6" selection-end-column="26" />
+        <state relative-caret-position="-7302">
+          <caret line="25" column="18" selection-start-line="25" selection-start-column="18" selection-end-line="25" selection-end-column="18" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/README.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor relative-caret-position="85">
+            <caret line="5" column="17" selection-start-line="5" selection-start-column="17" selection-end-line="5" selection-end-column="17" />
+          </first_editor>
+          <second_editor />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/annotation.kt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="204">
+          <caret line="14" column="22" selection-start-line="14" selection-start-column="22" selection-end-line="14" selection-end-column="22" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/parser.kt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="34">
+          <caret line="2" column="13" lean-forward="true" selection-start-line="2" selection-start-column="13" selection-end-line="2" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/lexer.kt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="102">
+          <caret line="6" selection-start-line="6" selection-end-line="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/playground.kt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="17">
+          <caret line="26" column="5" selection-start-line="26" selection-start-column="5" selection-end-line="26" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/symbols.kt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-145" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/token.kt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="119">
+          <caret line="7" selection-start-line="7" selection-end-line="7" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/virtual_machine.kt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="374">
+          <caret line="24" column="35" lean-forward="true" selection-start-line="24" selection-start-column="35" selection-end-line="24" selection-end-column="35" />
+          <folding>
+            <element signature="n#!!block;n#irToString#0;n#!!block;n#VirtualMachine#0" />
+            <element signature="n#!!block;n#findAllLabels#0;n#!!block;n#VirtualMachine#0" />
+            <element signature="n#!!block;n#lookupFunc#0;n#!!block;n#VirtualMachine#0" />
+            <element signature="n#!!block;n#lookupTypeList#0;n#!!block;n#VirtualMachine#0" />
+            <element signature="n#!!block;n#jump#1;n#!!block;n#VirtualMachine#0" />
+            <element signature="n#!!block;n#jumpFalse#0;n#!!block;n#VirtualMachine#0" />
+            <element signature="n#!!block;n#callMethod#0;n#!!block;n#VirtualMachine#0" />
+            <element signature="n#!!block;n#addFloat#0;n#!!block;n#VirtualMachine#0" />
+            <element signature="n#!!block;n#subFloat#0;n#!!block;n#VirtualMachine#0" />
+            <element signature="n#!!block;n#mulFloat#0;n#!!block;n#VirtualMachine#0" />
+            <element signature="n#!!block;n#divFloat#0;n#!!block;n#VirtualMachine#0" />
+            <element signature="n#!!block;n#computeInt#0;n#!!block;n#VirtualMachine#0" />
+            <element signature="n#!!block;n#computeFloat#0;n#!!block;n#VirtualMachine#0" />
+            <element signature="n#!!block;n#add#0;n#!!block;n#VirtualMachine#0" />
+            <element signature="n#!!block;n#sub#0;n#!!block;n#VirtualMachine#0" />
+            <element signature="n#!!block;n#mul#0;n#!!block;n#VirtualMachine#0" />
+            <element signature="n#!!block;n#div#0;n#!!block;n#VirtualMachine#0" />
+            <element signature="n#!!block;n#eq#0;n#!!block;n#VirtualMachine#0" />
+            <element signature="n#!!block;n#uneq#0;n#!!block;n#VirtualMachine#0" />
+            <element signature="n#!!block;n#computeCompareExp#0;n#!!block;n#VirtualMachine#0" />
+            <element signature="n#!!block;n#lt#0;n#!!block;n#VirtualMachine#0" />
+            <element signature="n#!!block;n#gt#0;n#!!block;n#VirtualMachine#0" />
+            <element signature="n#!!block;n#le#0;n#!!block;n#VirtualMachine#0" />
+            <element signature="n#!!block;n#ge#0;n#!!block;n#VirtualMachine#0" />
+          </folding>
         </state>
       </provider>
     </entry>

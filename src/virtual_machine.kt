@@ -301,8 +301,24 @@ class VirtualMachine{
         programCounter = addr
     }
 
-    fun callFunction(funcName: String){
+    fun jumpTrue(ir: IR){
+        val label = ir.dest
+        val pos = labelMap[label] ?: programCounter + 1
+        val temp = pop()
+        val res = (temp.value as String).toBoolean()
+        if(res){
+            jump(pos - 1)
+        }
+    }
 
+    fun jumpFalse(ir: IR){
+        val label = ir.dest
+        val pos = labelMap[label] ?: programCounter + 1
+        val temp = pop()
+        val res = (temp.value as String).toBoolean()
+        if(!res){
+            jump(pos - 1)
+        }
     }
 
     fun callMethod(funcName: String, ref: String){
@@ -473,9 +489,87 @@ class VirtualMachine{
         return !a
     }
 
+    fun callFunction(ir: IR){
+        val funcName = ir.dest
+        if(lookupFunc(funcName)){
+            excuteBuiltinFunc(funcName)
+        }
+        else{
+            // return时，pc在外面自己会++的，所以保存本语句的pc即可
+            val retAddr = programCounter
+            retReg = retAddr
+            val pos = labelMap[funcName] ?: programCounter + 1
+            jump(pos - 1)
+            stack.push(currentFrame)
+            currentFrame = StackFrame()
+        }
+    }
+
+    fun param(ir: IR){
+        val lastFrame = stack.peek()
+        val paramVal = lastFrame.pop()
+        val paramName = ir.dest
+        val paramType = ir.src
+        store(paramName, paramType, paramVal.value)
+    }
+
+    fun ret(ir: IR){
+        val retType = ir.dest
+        var retVal: MemItem? = null
+        if(retType != "void"){
+            retVal = pop()
+        }
+
+        // clear stack
+        currentFrame = stack.pop()
+        // push retVal
+        retVal?.let { push(retVal) }
+        // jump to return address
+        if(currentFrame.frameName == "__Main__"){
+            jump(labelMap["END"] ?: irArray.size - 1)
+        }else{
+            jump(retReg)
+        }
+    }
+
+    fun field(ir: IR){
+        val initVal = pop()
+        val fieldName = ir.dest
+        val fieldType = ir.src
+
+        val thisRef = load("this") // heap[this] = heap[AnnoymousObj]
+        var thisRefVal = thisRef?.value as ClassObject
+        initVal.name = fieldName
+        thisRefVal.self[fieldName] = initVal //MemItem类型
+    }
+
+    fun pushA(ir: IR){
+        val identifier = ir.dest
+        val item = load(identifier)
+        if(item!= null){
+            push(item)
+        }
+        else{
+            println("加载 $identifier 失败...")
+        }
+    }
+
+    fun mathOperation(func: (MemItem, MemItem)-> MemItem){
+        val temp1 = pop()
+        val temp2 = pop()
+        val res = func(temp1, temp2)
+        push(res)
+    }
+
+    fun logicOperation(func: (MemItem, MemItem)-> Boolean){
+        val temp1 = pop()
+        val temp2 = pop()
+        val res = func(temp1, temp2)
+        push(MemItem(value = res.toString(), type = "boolean"))
+    }
+
 
     fun runDirective(ir: IR){
-
         when(ir.operator){
             //data instructions
             "ICONST" ->{
@@ -524,25 +618,11 @@ class VirtualMachine{
             }
             "LOAD" ->{
                 // LOAD == PUSHA
-                val identifier = ir.dest
-                val item = load(identifier)
-                if(item!= null){
-                    push(item)
-                }
-                else{
-                    println("加载 $identifier 失败...")
-                }
+                pushA(ir)
             }
             "PUSHA"->{
                 // LOAD == PUSHA
-                val identifier = ir.dest
-                val item = load(identifier)
-                if(item!= null){
-                    push(item)
-                }
-                else{
-                    println("加载 $identifier 失败...")
-                }
+                pushA(ir)
             }
             "PUSH" ->{
                 val item = MemItem(value = ir.dest,type = "int")
@@ -578,10 +658,8 @@ class VirtualMachine{
             }
             "ADD" ->{
                 // ADD不能带参数，只有带类型的ADD才能带参数
-                val temp1 = pop()
-                val temp2 = pop()
-                val res = add(temp1, temp2)
-                push(res)
+                // 双冒号使用函数名做参数
+                mathOperation(::add)
             }
             "ADDF" ->{
                 val temp1 = MemItem(value = ir.dest, type="float")
@@ -602,70 +680,37 @@ class VirtualMachine{
                 push(res)
             }
             "SUB" ->{
-                val temp1 = pop()
-                val temp2 = pop()
-                val res = sub(temp1, temp2)
-                push(res)
+                mathOperation(::sub)
             }
             "MUL" ->{
-                val temp1 = pop()
-                val temp2 = pop()
-                val res = mul(temp1, temp2)
-                push(res)
+                mathOperation(::mul)
             }
             "DIV" ->{
-                val temp1 = pop()
-                val temp2 = pop()
-                val res = div(temp1, temp2)
-                push(res)
+                mathOperation(::div)
             }
             "EQ" ->{
-                val temp1 = pop()
-                val temp2 = pop()
-                val res = eq(temp1, temp2)
-                push(MemItem(value = res.toString(), type = "boolean"))
+                logicOperation(::eq)
             }
             "UNEQ" ->{
-                val temp1 = pop()
-                val temp2 = pop()
-                val res = eq(temp1, temp2)
-                push(MemItem(value = res.toString(), type = "boolean"))
+                logicOperation(::uneq)
             }
             "LT" ->{
-                val temp1 = pop()
-                val temp2 = pop()
-                val res = lt(temp1, temp2)
-                push(MemItem(value = res.toString(), type = "boolean"))
+                logicOperation(::lt)
             }
             "GT" ->{
-                val temp1 = pop()
-                val temp2 = pop()
-                val res = gt(temp1, temp2)
-                push(MemItem(value = res.toString(), type = "boolean"))
+                logicOperation(::gt)
             }
             "LE" ->{
-                val temp1 = pop()
-                val temp2 = pop()
-                val res = le(temp1, temp2)
-                push(MemItem(value = res.toString(), type = "boolean"))
+                logicOperation(::le)
             }
             "GE" ->{
-                val temp1 = pop()
-                val temp2 = pop()
-                val res = ge(temp1, temp2)
-                push(MemItem(value = res.toString(), type = "boolean"))
+                logicOperation(::ge)
             }
             "AND" ->{
-                val temp1 = pop()
-                val temp2 = pop()
-                val res = andExp(temp1, temp2)
-                push(MemItem(value = res.toString(), type = "boolean"))
+                logicOperation(::andExp)
             }
             "OR" ->{
-                val temp1 = pop()
-                val temp2 = pop()
-                val res = orExp(temp1, temp2)
-                push(MemItem(value = res.toString(), type = "boolean"))
+                logicOperation(::orExp)
             }
             "NOT" ->{
                 val temp = pop()
@@ -681,75 +726,24 @@ class VirtualMachine{
                 jump(pos - 1)
             }
             "JMPF" ->{
-                val label = ir.dest
-                val pos = labelMap[label] ?: programCounter + 1
-                val temp = pop()
-                val res = (temp.value as String).toBoolean()
-                if(!res){
-                    jump(pos - 1)
-                }
+                jumpFalse(ir)
             }
             "JMPT" ->{
-                val label = ir.dest
-                val pos = labelMap[label] ?: programCounter + 1
-                val temp = pop()
-                val res = (temp.value as String).toBoolean()
-                if(res){
-                    jump(pos - 1)
-                }
+                jumpTrue(ir)
             }
             "CALL" ->{
-                val funcName = ir.dest
-                if(lookupFunc(funcName)){
-                    excuteBuiltinFunc(funcName)
-                }
-                else{
-                    // return时，pc在外面自己会++的，所以保存本语句的pc即可
-                    val retAddr = programCounter
-                    retReg = retAddr
-                    val pos = labelMap[funcName] ?: programCounter + 1
-                    jump(pos - 1)
-                    stack.push(currentFrame)
-                    currentFrame = StackFrame()
-                }
+                callFunction(ir)
             }
             "PARAM" ->{
-                val lastFrame = stack.peek()
-                val paramVal = lastFrame.pop()
-                val paramName = ir.dest
-                val paramType = ir.src
-                store(paramName, paramType, paramVal.value)
+                param(ir)
             }
             "RET" -> {
                 // get return value, if dest is void, no return, and don't pop
-                val retType = ir.dest
-                var retVal: MemItem? = null
-                if(retType != "void"){
-                    retVal = pop()
-                }
-
-                // clear stack
-                currentFrame = stack.pop()
-                // push retVal
-                retVal?.let { push(retVal) }
-                // jump to return address
-                if(currentFrame.frameName == "__Main__"){
-                    jump(labelMap["END"] ?: irArray.size - 1)
-                }else{
-                    jump(retReg)
-                }
+                ret(ir)
             }
             "FIELD"->{
-                val initVal = pop()
-                val fieldName = ir.dest
-                val fieldType = ir.src
-
-                val thisRef = load("this") // heap[this] = heap[AnnoymousObj]
-                var thisRefVal = thisRef?.value as ClassObject
-                initVal.name = fieldName
-                thisRefVal.self[fieldName] = initVal //MemItem类型
+                field(ir)
             }
-
         }
         programCounter++
     }

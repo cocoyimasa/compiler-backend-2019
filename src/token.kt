@@ -1,5 +1,13 @@
 package main
 
+enum class TokenType{
+    Start, End,
+    Identifier, Operator, Keyword,
+    INT, FLOAT, BOOL, STRING,
+    ARRAY, MAP, LIST,
+
+}
+
 class Token{
 
     lateinit var str : String

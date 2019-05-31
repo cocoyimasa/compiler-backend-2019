@@ -3,7 +3,7 @@ A compiler backend written by Kotlin.
 
 =======================
 
-Lexer and parser now are not implemented now.
+Lexer and parser are not implemented now.
 
 So it is only a compiler backend.
 
